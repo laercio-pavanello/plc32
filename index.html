@@ -24,10 +24,10 @@ h1{text-align:center;color:#58a6ff;font-size:1.7em;letter-spacing:3px;padding:18
 .card-pulse{border-color:#d29922;background:#d2992211;cursor:pointer}
 .card-luz.on{border-color:#3fb950;background:#3fb95011}
 .card-manual.on{border-color:#58a6ff;background:#58a6ff11}
-.icon{font-size:2em;margin-bottom:8px}
-.card-pulse .icon{filter:drop-shadow(0 0 8px #d29922)}
-.card-luz.on .icon{filter:drop-shadow(0 0 8px #3fb950)}
-.card-manual.on .icon{filter:drop-shadow(0 0 8px #58a6ff)}
+.ico{color:#8b949e;transition:.25s;margin-bottom:6px;height:42px;display:flex;align-items:center;justify-content:center}
+.card-pulse .ico{color:#d29922}
+.card-luz.on .ico{color:#3fb950}
+.card-manual.on .ico{color:#58a6ff}
 .card-name{font-size:.75em;color:#8b949e;margin-bottom:6px;min-height:2em}
 .card-status{font-weight:700;font-size:.9em;letter-spacing:1.5px}
 .card-pulse .card-status{color:#d29922}
@@ -84,12 +84,12 @@ h1{text-align:center;color:#58a6ff;font-size:1.7em;letter-spacing:3px;padding:18
     <div class='sec-title'>&#128682; Portoes (Pulso 1s)</div>
     <div class='grid'>
       <div class='card card-pulse' onclick='pulso(0)'>
-        <div class='icon'>&#128663;</div>
+        <div class='ico' id='ico0'></div>
         <div class='card-name'>Portao Garagem</div>
         <div class='card-status' id='pulse0'>ACIONAR</div>
       </div>
       <div class='card card-pulse' onclick='pulso(1)'>
-        <div class='icon'>&#128682;</div>
+        <div class='ico' id='ico1'></div>
         <div class='card-name'>Portao Social</div>
         <div class='card-status' id='pulse1'>ACIONAR</div>
       </div>
@@ -99,7 +99,7 @@ h1{text-align:center;color:#58a6ff;font-size:1.7em;letter-spacing:3px;padding:18
     <div class='sec-title'>&#128161; Luz da Garagem</div>
     <div class='grid'>
       <div class='card card-luz off' id='card2' onclick='toggle(2)' style='cursor:pointer'>
-        <div class='icon'>&#128161;</div>
+        <div class='ico' id='ico2'></div>
         <div class='card-name'>Luz Garagem</div>
         <div class='card-status' id='status2'>OFF</div>
         <div class='card-timer' id='timer2'></div>
@@ -173,10 +173,25 @@ const MQTT_USER='plc32';
 const MQTT_PASS='Plc32@Casa2024';
 const MQTT_CLIENT='web_'+Math.random().toString(16).substr(2,8);
 const NOMES=["Portao Garagem","Portao Social","Luz Garagem","Luz Sala de Visitas","Luz Espaco Gourmet","Luz Quarto Suite Casal","Luz Corredor"];
-const ICONES=['&#128663;','&#128682;','&#128161;','&#128204;','&#127860;','&#127760;','&#128336;'];
 const TOPICS=['plc32/cmd/portao_garagem','plc32/cmd/portao_social','plc32/cmd/luz_garagem','plc32/cmd/luz_sala','plc32/cmd/luz_gourmet','plc32/cmd/luz_suite','plc32/cmd/luz_corredor'];
+
+// Ícones SVG de cada acionamento
+const ICONES_SVG = {
+  carro: '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M5 17a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm14 0a2 2 0 1 1 4 0 2 2 0 0 1-4 0z"/><path d="M3 17v-5l2-5h12l2 5v5"/><path d="M5 12h14"/></svg>',
+  portao: '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M4 8h16M4 13h16M9 3v18M15 3v18"/></svg>',
+  lampada: '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4"/><path d="M12 2a6 6 0 0 0-3.5 10.9c.5.4.8 1 .9 1.6l.2 1.5h4.8l.2-1.5c.1-.6.4-1.2.9-1.6A6 6 0 0 0 12 2z"/></svg>',
+  sofa: '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6"/><path d="M5 10V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><path d="M3 18h18M5 18v2M19 18v2"/></svg>',
+  churrasco: '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1.5 7a2 2 0 0 1-2 1.5H8.5a2 2 0 0 1-2-1.5L5 8z"/><path d="M8 17l-1 4M16 17l1 4"/><path d="M9 5c0-1 .5-2 1.5-2M12 5c0-1 .5-2 1.5-2M15 5c0-1 .5-2 1.5-2"/></svg>',
+  cama: '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9v11M22 9v11M2 13h20"/><path d="M4 9V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2"/><path d="M6 9V8a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1M13 9V8a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1"/></svg>',
+  luminaria: '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2h8l2 7H6l2-7z"/><path d="M12 9v9M9 21h6"/></svg>'
+};
+
+// Mapeamento ícone por relé
+const ICONE_RELE = ['carro','portao','lampada','sofa','churrasco','cama','luminaria'];
+
 let estados=new Array(7).fill(false),agendas=[],luzTimer=0,luzTimerMin=5;
 let client=null,conectado=false,modalIdx=0,diasSel=127;
+
 function conectarMQTT(){
   client=mqtt.connect(`wss://${MQTT_HOST}:${MQTT_PORT}/mqtt`,{
     username:MQTT_USER,password:MQTT_PASS,clientId:MQTT_CLIENT,
@@ -185,6 +200,9 @@ function conectarMQTT(){
     conectado=true;client.subscribe('plc32/status');atualizarBadge(true);
     document.getElementById('app-offline').style.display='none';
     document.getElementById('app-online').style.display='block';
+    document.getElementById('ico0').innerHTML=ICONES_SVG[ICONE_RELE[0]];
+    document.getElementById('ico1').innerHTML=ICONES_SVG[ICONE_RELE[1]];
+    document.getElementById('ico2').innerHTML=ICONES_SVG[ICONE_RELE[2]];
     buildLampadas();
   });
   client.on('message',(topic,payload)=>{
@@ -222,17 +240,22 @@ function salvarTimerLuz(){
 function pad(n){return String(n||0).padStart(2,'0');}
 function agendaInfo(ag){
   if(!ag||ag.modo==0)return '<span style="color:#444">Sem agenda</span>';
-  if(ag.modo==1)return '⏰ '+pad(ag.horaLiga)+':'+pad(ag.minLiga)+'-'+pad(ag.horaDesliga)+':'+pad(ag.minDesliga);
-  if(ag.modo==2)return '⏱ '+pad(ag.horaLiga)+':'+pad(ag.minLiga)+' por '+ag.timerMin+'min';
+  if(ag.modo==1)return '&#9200; '+pad(ag.horaLiga)+':'+pad(ag.minLiga)+'-'+pad(ag.horaDesliga)+':'+pad(ag.minDesliga);
+  if(ag.modo==2){
+    let extra='';
+    if(ag.agTimer>0){const m=Math.floor(ag.agTimer/60),s=ag.agTimer%60;extra=' &bull; faltam '+m+'m'+(s<10?'0':'')+s+'s';}
+    return '&#9201; '+pad(ag.horaLiga)+':'+pad(ag.minLiga)+' por '+ag.timerMin+'min'+extra;
+  }
   return '';
 }
 function buildLampadas(){
   const g=document.getElementById('grid-lampadas');if(!g)return;g.innerHTML='';
   for(let i=3;i<7;i++){
     const on=estados[i],agIdx=i-2,ag=agendas[agIdx]||{modo:0};
+    const ico=ICONES_SVG[ICONE_RELE[i]];
     g.innerHTML+=`<div class='card card-manual ${on?"on":"off"}' id='card${i}'>
       <div onclick='toggle(${i})' style='cursor:pointer'>
-        <div class='icon'>${ICONES[i]}</div>
+        <div class='ico'>${ico}</div>
         <div class='card-name'>${NOMES[i]}</div>
         <div class='card-status'>${on?"ON":"OFF"}</div>
       </div>
